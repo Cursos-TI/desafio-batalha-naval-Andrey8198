@@ -3,12 +3,37 @@
 // Desafio Batalha Naval - MateCheck
 // Este código inicial serve como base para o desenvolvimento do sistema de Batalha Naval.
 // Siga os comentários para implementar cada parte do desafio.
+int board[10][10];
+
 
 int main() {
     // Nível Novato - Posicionamento dos Navios
     // Sugestão: Declare uma matriz bidimensional para representar o tabuleiro (Ex: int tabuleiro[5][5];).
     // Sugestão: Posicione dois navios no tabuleiro, um verticalmente e outro horizontalmente.
     // Sugestão: Utilize `printf` para exibir as coordenadas de cada parte dos navios.
+    int maxShipSize = 3;
+    int ship1[] = {3, 3, 3};
+    int ship2[] = {3, 3, 3};
+
+    // Inicializar tabuleiro com 0
+    for(int i = 0; i < 10; i++) { for(int o = 0; o < 10; o++) { board[i][o] = 0; } }
+
+    // Checar se as posições são válidas e posicionar navios
+    if(checkValidPositions(4, 5, maxShipSize, 'H')) { positionShip(4, 5, ship1, maxShipSize, 'H'); }
+    if(checkValidPositions(2, 9, maxShipSize, 'V')) { positionShip(2, 9, ship2, maxShipSize, 'V'); }
+
+    // Renderizar tabuleiro com cor
+    // ANSI_COLOR_YELLOW  "\x1b[33m"
+    // ANSI_COLOR_BLUE    "\x1b[34m"
+    // ANSI_COLOR_RESET   "\x1b[0m"
+    for(int i = 0; i < 10; i++) {
+        
+        for(int o = 0; o < 10; o++) { 
+            (board[i][o] == 3)? printf("\x1b[33m" "%i " "\x1b[0m", board[i][o]) : printf("\x1b[34m" "%i " "\x1b[0m", board[i][o]); 
+        }
+        
+        printf("\n");
+    }
 
     // Nível Aventureiro - Expansão do Tabuleiro e Posicionamento Diagonal
     // Sugestão: Expanda o tabuleiro para uma matriz 10x10.
@@ -37,4 +62,55 @@ int main() {
     // 0 0 1 0 0
 
     return 0;
+}
+
+// Retorna 1 se as posições estão vazias, 0 se alguma está em uso. Deduz que as posições estão dentro dos limites do array
+//
+// Direções são:
+// H - horizontal, preencher row
+// V - vertical, preencher collum
+int checkValidPositions(int row, int collum, int shipSize, int direction) {
+    int valid = 0;
+
+    switch(direction) {
+    case 'H':
+    case 'h':
+        for(int i = 0; i < shipSize; i++) { valid = board[row][collum + i] == 0; }
+        break;
+
+    case 'V':
+    case 'v':
+        for(int i = 0; i < shipSize; i++) { valid = board[row + i][collum] == 0; }
+        break;
+
+    default:
+        printf("Erro nas direções");
+        return 0;
+    }
+
+    return valid;
+}
+
+// Posiciona navio em board (tabuleiro). Deduz que as posições são válidas
+//
+// Direções são:
+// H - horizontal, preencher row
+// V - vertical, preencher collum
+void positionShip(int row, int collum, int ship[], int shipSize, int direction) {
+
+    switch(direction) {
+    case 'H':
+    case 'h':
+        for(int i = 0; i < shipSize; i++) { board[row][collum + i] = ship[i]; }
+        break;
+
+    case 'V':
+    case 'v':
+        for(int i = 0; i < shipSize; i++) { board[row + i][collum] = ship[i]; }
+        break;
+
+    default:
+        printf("Erro nas direções");
+        break;
+    }
 }

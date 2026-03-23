@@ -7,18 +7,25 @@ int board[10][10];
 
 
 int main() {
-    // Nível Novato - Posicionamento dos Navios
-    // Sugestão: Declare uma matriz bidimensional para representar o tabuleiro (Ex: int tabuleiro[5][5];).
-    // Sugestão: Posicione dois navios no tabuleiro, um verticalmente e outro horizontalmente.
-    // Sugestão: Utilize `printf` para exibir as coordenadas de cada parte dos navios.
+    // Inicializando o tamanho dos navios e os arrays dos navios
     int maxShipSize = 3;
     int ship1[] = {3, 3, 3};
     int ship2[] = {3, 3, 3};
     int ship3[] = {3, 3, 3};
     int ship4[] = {3, 3, 3};
 
+    // Inicializar habilidades
+    int upsidedownTriangle[5][5];
+    int cross[5][5];
+    int diamond[5][5];
+
     // Inicializar tabuleiro com 0
     for(int i = 0; i < 10; i++) { for(int o = 0; o < 10; o++) { board[i][o] = 0; } }
+
+    // Inicializar poderes
+    initializeHability(5, upsidedownTriangle, 't'); // Triângulo
+    initializeHability(5, cross, 'c'); // Cruz
+    initializeHability(5, diamond, 'd'); // Diamante
 
     // Checar se as posições são válidas e posicionar navios
     checkPositionShip(4, 5, ship1, maxShipSize, 'H');
@@ -26,35 +33,13 @@ int main() {
     checkPositionShip(6, 3, ship2, maxShipSize, 'd');
     checkPositionShip(3, 3, ship2, maxShipSize, 'D');
 
+    // Checar se as posições são válidas e posicionar habilidades
+    checkPositionHability(7, 3, 5, upsidedownTriangle);
+    checkPositionHability(4, 7, 5, cross);
+    checkPositionHability(3, 5, 5, diamond);
+
     // Renderizar tabuleiro
     renderBoard();
-    
-
-    // Nível Aventureiro - Expansão do Tabuleiro e Posicionamento Diagonal
-    // Sugestão: Expanda o tabuleiro para uma matriz 10x10.
-    // Sugestão: Posicione quatro navios no tabuleiro, incluindo dois na diagonal.
-    // Sugestão: Exiba o tabuleiro completo no console, mostrando 0 para posições vazias e 3 para posições ocupadas.
-
-    // Nível Mestre - Habilidades Especiais com Matrizes
-    // Sugestão: Crie matrizes para representar habilidades especiais como cone, cruz, e octaedro.
-    // Sugestão: Utilize estruturas de repetição aninhadas para preencher as áreas afetadas por essas habilidades no tabuleiro.
-    // Sugestão: Exiba o tabuleiro com as áreas afetadas, utilizando 0 para áreas não afetadas e 1 para áreas atingidas.
-
-    // Exemplos de exibição das habilidades:
-    // Exemplo para habilidade em cone:
-    // 0 0 1 0 0
-    // 0 1 1 1 0
-    // 1 1 1 1 1
-    
-    // Exemplo para habilidade em octaedro:
-    // 0 0 1 0 0
-    // 0 1 1 1 0
-    // 0 0 1 0 0
-
-    // Exemplo para habilidade em cruz:
-    // 0 0 1 0 0
-    // 1 1 1 1 1
-    // 0 0 1 0 0
 
     return 0;
 }
@@ -66,7 +51,7 @@ int main() {
 // V/v - vertical, preencher collum
 // D - diagonal subindo
 // d - diagonal descendo
-int checkValidPositions(int row, int collum, int shipSize, int direction) {
+int checkValidPositionsShip(int row, int collum, int shipSize, int direction) {
     int valid = 0;
 
     switch(direction) {
@@ -105,7 +90,7 @@ int checkValidPositions(int row, int collum, int shipSize, int direction) {
         break;
 
     default:
-        printf("checkValidPositions() -> Erro nas direções\n");
+        printf("checkValidPositionsShip() -> Erro nas direções\n");
         return 0;
     }
 
@@ -154,20 +139,142 @@ void positionShip(int row, int collum, int ship[], int shipSize, int direction) 
 // D - diagonal subindo
 // d - diagonal descendo
 void checkPositionShip(int row, int collum, int ship[], int shipSize, int direction) {
-    if(checkValidPositions(row, collum, shipSize, direction)) { positionShip(row, collum, ship, shipSize, direction); }
+    if(checkValidPositionsShip(row, collum, shipSize, direction)) { positionShip(row, collum, ship, shipSize, direction); } 
+    else {
+        printf("Navio: { ");
+        for(int i = 0; i < shipSize; i++) { printf("%i ", ship[i]); }
+        printf("} - Posição não é válida!\n"); 
+    }
 }
 
 // Renderiza a array board (tabuleiro) em cor ao stdout
 void renderBoard() {
     // ANSI_COLOR_YELLOW  "\x1b[33m"
     // ANSI_COLOR_BLUE    "\x1b[34m"
+    // ANSI_COLOR_RED     "\x1b[31m"
     // ANSI_COLOR_RESET   "\x1b[0m"
     for(int i = 0; i < 10; i++) {
         
         for(int o = 0; o < 10; o++) { 
-            (board[i][o] == 3)? printf("\x1b[33m" "%i " "\x1b[0m", board[i][o]) : printf("\x1b[34m" "%i " "\x1b[0m", board[i][o]); 
+            if(board[i][o] == 3) {
+                printf("\x1b[33m" "%i " "\x1b[0m", board[i][o]);
+            } else if(board[i][o] == 5) {
+                printf("\x1b[31m" "%i " "\x1b[0m", board[i][o]);
+            } else {
+                printf("\x1b[34m" "%i " "\x1b[0m", board[i][o]);
+            }
         }
         
         printf("\n");
+    }
+}
+
+// Inicializa um array com uma forma de habilidade
+//
+// Formas válidas são:
+// T/t - triângulo de ponta-cabeça
+// C/c - cruz
+// L/l - losango
+void initializeHability(int arraySize, int habilityArray[][arraySize], char habilityType) {
+    int right, left;
+
+    // Encher de zero
+    for(int i = 0; i < arraySize; i++) { for(int o = 0; o < arraySize; o++) { habilityArray[i][o] = 0; } }
+
+    switch(habilityType) {
+    // 1 1 1 1 1
+    // 0 1 1 1 0
+    // 0 0 1 0 0
+    // 0 0 0 0 0
+    // 0 0 0 0 0
+    case 'T':
+    case 't':
+        right = 0, left = arraySize;
+
+        // Criar forma
+        for(int i = 0; i < arraySize; i++) {
+            for(int o = right; o < left; o++) {
+                habilityArray[i][o] = 1;
+            }
+
+            right++;
+            left--;
+        }
+
+        break;
+
+    // 0 0 1 0 0
+    // 1 1 1 1 1
+    // 0 0 1 0 0
+    // 0 0 1 0 0
+    // 0 0 1 0 0
+    case 'C':
+    case 'c':
+        right = (arraySize / 2) - 1, left = (arraySize - right) - 1;
+        int crossArms = arraySize / 3;
+
+        // Criar forma
+        for(int i = 0; i < arraySize; i++) {
+            for(int o = 0; o < arraySize; o++) {
+                if(i == crossArms || o > right && o < left) { habilityArray[i][o] = 1; }
+                // if() { habilityArray[i][o] = 1; }
+            }
+        }
+
+        break;
+
+    // 0 0 1 0 0
+    // 0 1 1 1 0
+    // 1 1 1 1 1
+    // 0 1 1 1 0
+    // 0 0 1 0 0
+    case 'D':
+    case 'd':
+        right = (arraySize / 2) - 1, left = (arraySize - right) - 1;
+        int isDecreasing = 0;
+
+        // Criar forma
+        for(int i = 0; i < arraySize; i++) {
+            for(int o = 0; o < arraySize; o++) {
+                if(o > right && o < left) { habilityArray[i][o] = 1; }
+            }
+
+            if(left == arraySize || isDecreasing) { isDecreasing = 1; right++; left--; } else { right--; left++; }
+        }
+
+        break;
+
+    default:
+        printf("initializeHability() -> Erro no tipo de habilidade");
+        break;
+    }
+}
+
+// Retorna 1 se a forma da habilidade está dentro dos limites do array de board (tabuleiro), 0 se não
+int checkValidPositionsHability(int row, int collum, int arraySize) {
+    return !(row + (arraySize / 2) >= 10 || collum + (arraySize / 2) >= 10) ||
+            (row - (arraySize / 2) < 0 || collum - (arraySize / 2) < 0);
+}
+
+// Posiciona uma forma de habilidade no board (tabuleiro) usando o centro da forma como ponto de montagem
+void positionHability(int row, int collum, int arraySize, int habilityArray[][arraySize]) {
+    int startRow = row - (arraySize / 2) - 1, startCollum = collum - (arraySize / 2) - 1, \
+    finishRow = row + (arraySize / 2) - 1, finishCollum = collum + (arraySize / 2) - 1;
+
+    for(int i = startRow, hi = 0; i <= finishRow; i++, hi++)
+        { for(int o = startCollum, ho = 0; o <= finishCollum; o++, ho++) {
+            if(habilityArray[hi][ho] == 1) { board[i][o] = 5; }
+        }
+    }
+
+}
+
+// Determina se a posição é válida e posiciona forma de habilidade em board (tabuleiro) se for válida, faz nada se for inválida
+void checkPositionHability(int row, int collum, int arraySize, int habilityArray[][arraySize]) {
+    if(checkValidPositionsHability(row, collum, arraySize)) { positionHability(row, collum, arraySize, habilityArray); }
+    else {
+        printf("Forma de habilidade: {\n");
+        for(int i = 0; i < arraySize; i++) { for(int o = 0; o < arraySize; o++) { printf("%i ", habilityArray[i][o]); } printf("\n"); }
+        printf("} - Posição não é válida!\n\n");
     }
 }

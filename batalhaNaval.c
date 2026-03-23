@@ -14,26 +14,21 @@ int main() {
     int maxShipSize = 3;
     int ship1[] = {3, 3, 3};
     int ship2[] = {3, 3, 3};
+    int ship3[] = {3, 3, 3};
+    int ship4[] = {3, 3, 3};
 
     // Inicializar tabuleiro com 0
     for(int i = 0; i < 10; i++) { for(int o = 0; o < 10; o++) { board[i][o] = 0; } }
 
     // Checar se as posições são válidas e posicionar navios
-    if(checkValidPositions(4, 5, maxShipSize, 'H')) { positionShip(4, 5, ship1, maxShipSize, 'H'); }
-    if(checkValidPositions(2, 9, maxShipSize, 'V')) { positionShip(2, 9, ship2, maxShipSize, 'V'); }
+    checkPositionShip(4, 5, ship1, maxShipSize, 'H');
+    checkPositionShip(2, 9, ship2, maxShipSize, 'V');
+    checkPositionShip(6, 3, ship2, maxShipSize, 'd');
+    checkPositionShip(3, 3, ship2, maxShipSize, 'D');
 
-    // Renderizar tabuleiro com cor
-    // ANSI_COLOR_YELLOW  "\x1b[33m"
-    // ANSI_COLOR_BLUE    "\x1b[34m"
-    // ANSI_COLOR_RESET   "\x1b[0m"
-    for(int i = 0; i < 10; i++) {
-        
-        for(int o = 0; o < 10; o++) { 
-            (board[i][o] == 3)? printf("\x1b[33m" "%i " "\x1b[0m", board[i][o]) : printf("\x1b[34m" "%i " "\x1b[0m", board[i][o]); 
-        }
-        
-        printf("\n");
-    }
+    // Renderizar tabuleiro
+    renderBoard();
+    
 
     // Nível Aventureiro - Expansão do Tabuleiro e Posicionamento Diagonal
     // Sugestão: Expanda o tabuleiro para uma matriz 10x10.
@@ -64,27 +59,53 @@ int main() {
     return 0;
 }
 
-// Retorna 1 se as posições estão vazias, 0 se alguma está em uso. Deduz que as posições estão dentro dos limites do array
+// Retorna 1 se as posições estão vazias, 0 se alguma está em uso
 //
 // Direções são:
-// H - horizontal, preencher row
-// V - vertical, preencher collum
+// H/h - horizontal, preencher row
+// V/v - vertical, preencher collum
+// D - diagonal subindo
+// d - diagonal descendo
 int checkValidPositions(int row, int collum, int shipSize, int direction) {
     int valid = 0;
 
     switch(direction) {
     case 'H':
     case 'h':
+        // Testar se a posição do navio está dentro dos limites do array
+        if((row >= 10) || (collum + shipSize >= 10)) { return 0; }
+
+        // Testar se a posição do navio está disponível
         for(int i = 0; i < shipSize; i++) { valid = board[row][collum + i] == 0; }
         break;
 
     case 'V':
     case 'v':
+        // Testar se a posição do navio está dentro dos limites do array
+        if((row + shipSize >= 10) || (collum >= 10)) { return 0; }
+
+        // Testar se a posição do navio está disponível
         for(int i = 0; i < shipSize; i++) { valid = board[row + i][collum] == 0; }
         break;
 
+    case 'D':
+        // Testar se a posição do navio está dentro dos limites do array
+        if((row - shipSize < 0) || (collum - shipSize < 0)) { return 0; }
+
+        // Testar se a posição do navio está disponível
+        for(int i = 0; i < shipSize; i++) { valid = board[row - i][collum - i] == 0; }
+        break;
+
+    case 'd':
+        // Testar se a posição do navio está dentro dos limites do array
+        if((row + shipSize >= 10) || (collum + shipSize >= 10)) { return 0; }
+
+        // Testar se a posição do navio está disponível
+        for(int i = 0; i < shipSize; i++) { valid = board[row + i][collum + i] == 0; }
+        break;
+
     default:
-        printf("Erro nas direções");
+        printf("checkValidPositions() -> Erro nas direções\n");
         return 0;
     }
 
@@ -94,8 +115,10 @@ int checkValidPositions(int row, int collum, int shipSize, int direction) {
 // Posiciona navio em board (tabuleiro). Deduz que as posições são válidas
 //
 // Direções são:
-// H - horizontal, preencher row
-// V - vertical, preencher collum
+// H/h - horizontal, preencher row
+// V/v - vertical, preencher collum
+// D - diagonal subindo
+// d - diagonal descendo
 void positionShip(int row, int collum, int ship[], int shipSize, int direction) {
 
     switch(direction) {
@@ -109,8 +132,42 @@ void positionShip(int row, int collum, int ship[], int shipSize, int direction) 
         for(int i = 0; i < shipSize; i++) { board[row + i][collum] = ship[i]; }
         break;
 
-    default:
-        printf("Erro nas direções");
+    case 'D':
+        for(int i = 0; i < shipSize; i++) { board[row - i][collum - i] = ship[i]; }
         break;
+
+    case 'd':
+        for(int i = 0; i < shipSize; i++) { board[row + i][collum + i] = ship[i]; }
+        break;
+
+    default:
+        printf("positionShip() -> Erro nas direções\n");
+        break;
+    }
+}
+
+// Determina se a posição é válida e posiciona navio em board (tabuleiro) se for válida, faz nada se for inválida
+//
+// Direções são:
+// H/h - horizontal, preencher row
+// V/v - vertical, preencher collum
+// D - diagonal subindo
+// d - diagonal descendo
+void checkPositionShip(int row, int collum, int ship[], int shipSize, int direction) {
+    if(checkValidPositions(row, collum, shipSize, direction)) { positionShip(row, collum, ship, shipSize, direction); }
+}
+
+// Renderiza a array board (tabuleiro) em cor ao stdout
+void renderBoard() {
+    // ANSI_COLOR_YELLOW  "\x1b[33m"
+    // ANSI_COLOR_BLUE    "\x1b[34m"
+    // ANSI_COLOR_RESET   "\x1b[0m"
+    for(int i = 0; i < 10; i++) {
+        
+        for(int o = 0; o < 10; o++) { 
+            (board[i][o] == 3)? printf("\x1b[33m" "%i " "\x1b[0m", board[i][o]) : printf("\x1b[34m" "%i " "\x1b[0m", board[i][o]); 
+        }
+        
+        printf("\n");
     }
 }
